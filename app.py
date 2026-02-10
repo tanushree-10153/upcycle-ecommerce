@@ -1,36 +1,103 @@
-from flask import Flask, render_template, redirect, url_for
+from flask import Flask, render_template, redirect, url_for, request, flash
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
+import sqlite3, os
 
 app = Flask(__name__)
+app.secret_key = "upcycle-secret"
 
-products = [
-    {"id": 1, "name": "Upcycled Denim Bag", "price": 499, "image": "bag.jpg"},
-    {"id": 2, "name": "Patchwork Cushion Cover", "price": 299, "image": "cushion.jpg"},
-    {"id": 3, "name": "T-Shirt Tote Bag", "price": 199, "image": "tote.jpg"}
-]
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
 
-cart = []
+# ---------- DATABASE ----------
+def get_db():
+    return sqlite3.connect("users.db")
 
+def init_db():
+    conn = get_db()
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT,
+            email TEXT UNIQUE,
+            password TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+init_db()
+
+# ---------- USER MODEL ----------
+class User(UserMixin):
+    def __init__(self, id, username, email, password):
+        self.id = id
+        self.username = username
+        self.email = email
+        self.password = password
+
+@login_manager.user_loader
+def load_user(user_id):
+    conn = get_db()
+    user = conn.execute("SELECT * FROM users WHERE id=?", (user_id,)).fetchone()
+    conn.close()
+    if user:
+        return User(*user)
+    return None
+
+# ---------- ROUTES ----------
 @app.route("/")
 def home():
-    return render_template("index.html", products=products)
+    return redirect(url_for("login"))
 
-@app.route("/add/<int:id>")
-def add_to_cart(id):
-    for p in products:
-        if p["id"] == id:
-            cart.append(p)
-    return redirect(url_for("cart_page"))
+@app.route("/signup", methods=["GET", "POST"])
+def signup():
+    if request.method == "POST":
+        username = request.form["username"]
+        email = request.form["email"]
+        password = generate_password_hash(request.form["password"])
 
-@app.route("/cart")
-def cart_page():
-    return render_template("cart.html", cart=cart)
+        try:
+            conn = get_db()
+            conn.execute("INSERT INTO users (username, email, password) VALUES (?,?,?)",
+                         (username, email, password))
+            conn.commit()
+            conn.close()
+            flash("Signup successful! Please login.")
+            return redirect(url_for("login"))
+        except:
+            flash("Email already exists")
 
-@app.route("/checkout", methods=["POST"])
-def checkout():
-    cart.clear()
-    return "<h2>Order placed successfully 🌱</h2>"
+    return render_template("signup.html")
 
-import os
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        email = request.form["email"]
+        password = request.form["password"]
+
+        conn = get_db()
+        user = conn.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
+        conn.close()
+
+        if user and check_password_hash(user[3], password):
+            login_user(User(*user))
+            return redirect(url_for("dashboard"))
+        flash("Invalid login details")
+
+    return render_template("login.html")
+
+@app.route("/dashboard")
+@login_required
+def dashboard():
+    return render_template("dashboard.html", user=current_user)
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for("login"))
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
