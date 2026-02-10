@@ -1,30 +1,16 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Cart</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="p-8 bg-gray-100">
+{% extends "base.html" %}
+{% block content %}
 
-<h1 class="text-2xl font-bold mb-4">Your Cart</h1>
+<h2>Your Cart</h2>
 
-{% if cart %}
-  {% for item in cart %}
-    <p>{{ item.name }} – ₹{{ item.price }}</p>
-  {% endfor %}
+{% for item in cart %}
+  <p>{{ item.name }} – ₹{{ item.price }}</p>
+{% endfor %}
 
-  <form action="/checkout" method="post">
-    <button class="bg-blue-600 text-white px-4 py-2 mt-4 rounded">
-      Place Order
-    </button>
-  </form>
-{% else %}
-  <p>Your cart is empty.</p>
-{% endif %}
+<h3>Total: ₹{{ total }}</h3>
 
-<a href="/" class="text-green-600 underline mt-4 block">
-Back to Products
-</a>
+<form method="POST" action="/checkout">
+  <button>Place Order</button>
+</form>
 
-</body>
-</html>
+{% endblock %}

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Upcycle Store</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="container">
+  <nav>
+    <a href="/products">Products</a> |
+    {% if current_user.is_authenticated %}
+      <a href="/cart">Cart</a> |
+      <a href="/logout">Logout</a>
+    {% else %}
+      <a href="/login">Login</a>
+    {% endif %}
+  </nav>
+  <hr>
+
+  {% block content %}{% endblock %}
+</div>
+
+</body>
+</html>

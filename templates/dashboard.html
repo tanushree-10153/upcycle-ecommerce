@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Welcome, {{ current_user.username }}</h2>
+<p>You are logged in successfully.</p>
+
+<a href="/products">View Products</a>
+
+{% endblock %}
