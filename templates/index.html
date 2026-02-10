@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Upcycled Products</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="p-8 bg-gray-100">
+
+<h1 class="text-3xl font-bold mb-6 text-center">
+Upcycled Sustainable Products
+</h1>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+{% for product in products %}
+  <div class="bg-white p-4 rounded shadow">
+    <img src="/static/images/{{ product.image }}" class="h-40 mx-auto">
+    <h2 class="text-xl mt-2">{{ product.name }}</h2>
+    <p class="text-green-600 font-bold">₹{{ product.price }}</p>
+
+    <a href="/add/{{ product.id }}"
+       class="block text-center bg-green-600 text-white px-4 py-2 mt-3 rounded">
+       Add to Cart
+    </a>
+  </div>
+{% endfor %}
+</div>
+
+<div class="text-center mt-6">
+  <a href="/cart" class="text-blue-600 underline">Go to Cart</a>
+</div>
+
+</body>
+</html>
